@@ -130,7 +130,7 @@ var (
 		&sensu.PluginConfigOption{
 			Path:      "backend_session_critical_percent",
 			Env:       "HAPROXY_BACKEND_SESSION_CRITICAL_PERCENT",
-			Argument:  "session-critical-percent",
+			Argument:  "backend-session-critical-percent",
 			Shorthand: "B",
 			Default:   0,
 			Usage:     "Per Backend Session Limit Critical percent",
@@ -170,7 +170,7 @@ func checkArgs(event *types.Event) (int, error) {
 
 	fi, err := os.Lstat(path)
 	if err != nil {
-		return sensu.CheckStateUnknown, fmt.Errorf("--socket stat error: %w", err)
+		return sensu.CheckStateUnknown, fmt.Errorf("--socket error: %w", err)
 	} else if fi.Mode() != os.ModeSocket {
 		return sensu.CheckStateUnknown, fmt.Errorf("--socket: %s is not socket: %v", path, fi.Mode())
 	}
