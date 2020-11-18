@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/sardinasystems/sensu-go-haproxy-check/haproxy"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
+	"go.uber.org/multierr"
 )
 
 // Config represents the check plugin config.
@@ -42,7 +45,7 @@ var (
 			Env:       "HAPROXY_SOCKET",
 			Argument:  "socket",
 			Shorthand: "S",
-			Default:   "/var/run/haproxy.socket",
+			Default:   "/var/run/haproxy.sock",
 			Usage:     "Path to haproxy control socket",
 			Value:     &plugin.SocketPath,
 		},
@@ -171,7 +174,7 @@ func checkArgs(event *types.Event) (int, error) {
 	fi, err := os.Lstat(path)
 	if err != nil {
 		return sensu.CheckStateUnknown, fmt.Errorf("--socket error: %w", err)
-	} else if fi.Mode() != os.ModeSocket {
+	} else if fi.Mode()&os.ModeSocket == 0 {
 		return sensu.CheckStateUnknown, fmt.Errorf("--socket: %s is not socket: %v", path, fi.Mode())
 	}
 	plugin.SocketPath = path
@@ -186,11 +189,45 @@ func checkArgs(event *types.Event) (int, error) {
 }
 
 func executeCheck(event *types.Event) (int, error) {
-
-	stats, err := haproxy.GetStat(plugin.SocketPath)
+	stats, err := haproxy.GetStats(plugin.SocketPath)
 	if err != nil {
 		return sensu.CheckStateUnknown, fmt.Errorf("Failed to get service stats: %w", err)
 	}
 
-	return sensu.CheckStateOK, nil
+	// Leave only selected services
+	for key := range stats {
+		if plugin.AllServices || key == plugin.Service {
+			continue
+		}
+
+		delete(stats, key)
+	}
+
+	// No services
+	if len(stats) == 0 {
+		log.Printf("No service: %s", plugin.Service)
+		if plugin.MissingFail {
+			return sensu.CheckStateCritical, nil
+		} else if plugin.MissingOk {
+			return sensu.CheckStateOK, nil
+		}
+
+		return sensu.CheckStateUnknown, nil
+	}
+
+	ret := sensu.CheckStateOK
+	err = nil
+	for pxname, stat := range stats {
+		newret, err2 := checkService(pxname, stat)
+		err = multierr.Append(err, err2)
+		if newret > ret {
+			ret = newret
+		}
+	}
+
+	return ret, err
+}
+
+func checkService(pxname string, svc haproxy.StatService) (int, error) {
+	return 0, nil
 }

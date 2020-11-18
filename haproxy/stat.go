@@ -144,10 +144,14 @@ type StatLine struct {
 	// [[[end]]]
 }
 
-// StatData is a mapping for PxName -> SvName -> StatLine
-type StatData = map[string]map[string]StatLine
+// StatService is a mapping of all SvName lines
+type StatService map[string]StatLine
 
-func ParseStatCSV(data io.Reader) (StatData, error) {
+// Stats is a mapping for PxName -> SvName -> StatLine
+type Stats = map[string]StatService
+
+// ParseStatCSV parses stats csv into Stats
+func ParseStatCSV(data io.Reader) (Stats, error) {
 	lines := []StatLine{}
 
 	err := gocsv.Unmarshal(data, &lines)
@@ -155,11 +159,11 @@ func ParseStatCSV(data io.Reader) (StatData, error) {
 		return nil, fmt.Errorf("csv parse error: %w", err)
 	}
 
-	out := make(StatData)
+	out := make(Stats)
 	for _, line := range lines {
 		pxmap, ok := out[line.Pxname]
 		if !ok {
-			pxmap = make(map[string]StatLine)
+			pxmap = make(StatService)
 			out[line.Pxname] = pxmap
 		}
 
@@ -169,7 +173,8 @@ func ParseStatCSV(data io.Reader) (StatData, error) {
 	return out, nil
 }
 
-func GetStat(socketPath string) (StatData, error) {
+// GetStats query HAProxy for Stats
+func GetStats(socketPath string) (Stats, error) {
 	//sock, err := net.Dial("unix", socketPath)
 	addr := &net.UnixAddr{Name: socketPath}
 	sock, err := net.DialUnix("unix", nil, addr)
@@ -189,6 +194,21 @@ func GetStat(socketPath string) (StatData, error) {
 	return ParseStatCSV(sock)
 }
 
+// IsUp checks that status of the service is up
 func (l StatLine) IsUp() bool {
 	return l.Status == "OPEN" || l.Status == "UP" || l.Status == "no check" || l.Status == "DRAIN"
+}
+
+// Servers makes a copy of StatService without frontend and backend entries
+func (s StatService) Servers() StatService {
+	ret := make(StatService)
+	for key, value := range s {
+		if key == Frontend || key == Backend {
+			continue
+		}
+
+		ret[key] = value
+	}
+
+	return ret
 }

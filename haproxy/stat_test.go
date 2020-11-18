@@ -35,10 +35,10 @@ func TestParseStatCSV(t *testing.T) {
 	assert.NoError(err)
 	assert.Len(stats, 4)
 
-	t.Log(stats)
+	//t.Log(stats)
 }
 
-func TestGetStat(t *testing.T) {
+func TestGetStats(t *testing.T) {
 	assert := assert.New(t)
 	tempDir := t.TempDir()
 
@@ -97,7 +97,7 @@ func TestGetStat(t *testing.T) {
 
 	<-serverReady
 
-	stats, err := GetStat(socketPath)
+	stats, err := GetStats(socketPath)
 	assert.NoError(err)
 	assert.Len(stats, 4)
 
