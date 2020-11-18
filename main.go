@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
@@ -81,6 +82,78 @@ var (
 			Usage:     "Service missing is Fail",
 			Value:     &plugin.MissingFail,
 		},
+		&sensu.PluginConfigOption{
+			Path:      "warning_percent",
+			Env:       "HAPROXY_WARNING_PERCENT",
+			Argument:  "warning-percent",
+			Shorthand: "w",
+			Default:   50,
+			Usage:     "Warning percent",
+			Value:     &plugin.WarningPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "critical_percent",
+			Env:       "HAPROXY_CRITICAL_PERCENT",
+			Argument:  "critical-percent",
+			Shorthand: "c",
+			Default:   25,
+			Usage:     "Critical percent",
+			Value:     &plugin.CriticalPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "session_warning_percent",
+			Env:       "HAPROXY_SESSION_WARNING_PERCENT",
+			Argument:  "session-warning-percent",
+			Shorthand: "W",
+			Default:   75,
+			Usage:     "Session Limit Warning percent",
+			Value:     &plugin.SessionWarningPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "session_critical_percent",
+			Env:       "HAPROXY_SESSION_CRITICAL_PERCENT",
+			Argument:  "session-critical-percent",
+			Shorthand: "C",
+			Default:   90,
+			Usage:     "Session Limit Critical percent",
+			Value:     &plugin.SessionCriticalPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "backend_session_warning_percent",
+			Env:       "HAPROXY_BACKEND_SESSION_WARNING_PERCENT",
+			Argument:  "backend-session-warning-percent",
+			Shorthand: "b",
+			Default:   0,
+			Usage:     "Per Backend Session Limit Warning percent",
+			Value:     &plugin.BackendSessionWarningPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "backend_session_critical_percent",
+			Env:       "HAPROXY_BACKEND_SESSION_CRITICAL_PERCENT",
+			Argument:  "session-critical-percent",
+			Shorthand: "B",
+			Default:   0,
+			Usage:     "Per Backend Session Limit Critical percent",
+			Value:     &plugin.BackendSessionCriticalPercent,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "min_warning_count",
+			Env:       "HAPROXY_MIN_WARNING_COUNT",
+			Argument:  "min-warning-count",
+			Shorthand: "M",
+			Default:   0,
+			Usage:     "Minimum server Warning count",
+			Value:     &plugin.MinWarningCount,
+		},
+		&sensu.PluginConfigOption{
+			Path:      "min_critical_count",
+			Env:       "HAPROXY_MIN_CRITICAL_COUNT",
+			Argument:  "min-critical-count",
+			Shorthand: "X",
+			Default:   0,
+			Usage:     "Minimum server Critical count",
+			Value:     &plugin.MinCriticalCount,
+		},
 	}
 )
 
@@ -90,13 +163,28 @@ func main() {
 }
 
 func checkArgs(event *types.Event) (int, error) {
-	if len(plugin.Example) == 0 {
-		return sensu.CheckStateWarning, fmt.Errorf("--example or CHECK_EXAMPLE environment variable is required")
+	path, err := filepath.Abs(plugin.SocketPath)
+	if err != nil {
+		return sensu.CheckStateUnknown, fmt.Errorf("--socket error: %w", err)
 	}
+
+	fi, err := os.Lstat(path)
+	if err != nil {
+		return sensu.CheckStateUnknown, fmt.Errorf("--socket stat error: %w", err)
+	} else if fi.Mode() != os.ModeSocket {
+		return sensu.CheckStateUnknown, fmt.Errorf("--socket: %s is not socket: %v", path, fi.Mode())
+	}
+	plugin.SocketPath = path
+
+	if plugin.Service == "" && !plugin.AllServices {
+		return sensu.CheckStateWarning, fmt.Errorf("--service or --all-services are required")
+	} else if plugin.Service != "" && plugin.AllServices {
+		return sensu.CheckStateWarning, fmt.Errorf("Only one --service or --all-services should be used")
+	}
+
 	return sensu.CheckStateOK, nil
 }
 
 func executeCheck(event *types.Event) (int, error) {
-	log.Println("executing check with --example", plugin.Example)
 	return sensu.CheckStateOK, nil
 }
