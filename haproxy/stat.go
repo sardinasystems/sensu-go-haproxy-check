@@ -3,26 +3,39 @@ package haproxy
 import (
 	"fmt"
 	"io"
+	"net"
 
 	"github.com/gocarina/gocsv"
 )
 
+const (
+	Frontend string = "FRONTEND"
+	Backend         = "BACKEND"
+)
+
+// StatLine represents one line from haproxy stat report
 type StatLine struct {
 	// [[[cog:
+	// # Header: echo "show stat" | nc -U /var/run/haproxy.sock | head -n1
 	// header = '''# pxname,svname,qcur,qmax,scur,smax,slim,stot,bin,bout,dreq,dresp,ereq,econ,eresp,wretr,wredis,status,weight,act,bck,chkfail,chkdown,lastchg,downtime,qlimit,pid,iid,sid,throttle,lbtot,tracked,type,rate,rate_lim,rate_max,check_status,check_code,check_duration,hrsp_1xx,hrsp_2xx,hrsp_3xx,hrsp_4xx,hrsp_5xx,hrsp_other,hanafail,req_rate,req_rate_max,req_tot,cli_abrt,srv_abrt,comp_in,comp_out,comp_byp,comp_rsp,lastsess,last_chk,last_agt,qtime,ctime,rtime,ttime,agent_status,agent_code,agent_duration,check_desc,agent_desc,check_rise,check_fall,check_health,agent_rise,agent_fall,agent_health,addr,cookie,mode,algo,conn_rate,conn_rate_max,conn_tot,intercepted,dcon,dses,wrew,connect,reuse,cache_lookups,cache_hits,srv_icur,src_ilim,qtime_max,ctime_max,rtime_max,ttime_max,eint,idle_conn_cur,safe_conn_cur,used_conn_cur,need_conn_est,uweight,-,h2_headers_rcvd,h2_data_rcvd,h2_settings_rcvd,h2_rst_stream_rcvd,h2_goaway_rcvd,h2_detected_conn_protocol_errors,h2_detected_strm_protocol_errors,h2_rst_stream_resp,h2_goaway_resp,h2_open_connections,h2_backend_open_streams,h2_open_connections,h2_backend_open_streams,'''
 	// fields = [(s.replace('# ', '').strip().title().replace('_', ''), s) for s in header.split(',') if s not in ['', '-']]
 	// used = set()
 	// fields = (f for f in fields if f not in used and (used.add(f) or True))
 	// for field in fields:
-	//     cog.outl(f"""{field[0]} string `csv:"{field[1]}"`""")
+	//     type_ = 'string'
+	//     #if field[1].endswith(('name', 'desc')) or field[1] in ['status', 'mode', 'check_status']:
+	//     #    type_ = 'string'
+	//     if field[1] in ['scur', 'slim']:	# NOTE(vermakov): we use only a few fields in check, leave others as string
+	//         type_ = 'int'
+	//     cog.outl(f"""{field[0]:28s} {type_:6s} `csv:"{field[1]}"`""")
 	// ]]]
 	Pxname                       string `csv:"# pxname"`
 	Svname                       string `csv:"svname"`
 	Qcur                         string `csv:"qcur"`
 	Qmax                         string `csv:"qmax"`
-	Scur                         string `csv:"scur"`
+	Scur                         int    `csv:"scur"`
 	Smax                         string `csv:"smax"`
-	Slim                         string `csv:"slim"`
+	Slim                         int    `csv:"slim"`
 	Stot                         string `csv:"stot"`
 	Bin                          string `csv:"bin"`
 	Bout                         string `csv:"bout"`
@@ -130,6 +143,7 @@ type StatLine struct {
 	// [[[end]]]
 }
 
+// StatData is a mapping for PxName -> SvName -> StatLine
 type StatData = map[string]map[string]StatLine
 
 func ParseStatCSV(data io.Reader) (StatData, error) {
@@ -152,4 +166,23 @@ func ParseStatCSV(data io.Reader) (StatData, error) {
 	}
 
 	return out, nil
+}
+
+func GetStat(socketPath string) (StatData, error) {
+	sock, err := net.Dial("unix", socketPath)
+	if err != nil {
+		return nil, fmt.Errorf("socket open error: %w", err)
+	}
+	defer sock.Close()
+
+	_, err = sock.Write([]byte("show stat\n"))
+	if err != nil {
+		return nil, fmt.Errorf("socket request error: %w", err)
+	}
+
+	return ParseStatCSV(sock)
+}
+
+func (l StatLine) IsUp() bool {
+	return l.Status == "OPEN" || l.Status == "UP" || l.Status == "no check" || l.Status == "DRAIN"
 }

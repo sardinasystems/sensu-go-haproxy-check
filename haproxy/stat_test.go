@@ -1,8 +1,13 @@
 package haproxy
 
 import (
+	"context"
+	"net"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -31,4 +36,70 @@ func TestParseStatCSV(t *testing.T) {
 	assert.Len(stats, 4)
 
 	t.Log(stats)
+}
+
+func TestGetStat(t *testing.T) {
+	assert := assert.New(t)
+	tempDir := t.TempDir()
+
+	socketPath := filepath.Join(tempDir, "haproxy.sock")
+
+	serverCtx, serverCf := context.WithCancel(context.TODO())
+	defer serverCf()
+
+	serverReady := make(chan bool, 1)
+
+	go func() {
+		addr := &net.UnixAddr{Name: socketPath}
+		ln, err := net.ListenUnix("unix", addr)
+		assert.NoError(err)
+		defer ln.Close()
+		serverReady <- true
+
+		for {
+			select {
+			case <-serverCtx.Done():
+				t.Log("socket server terminated")
+				return
+
+			default:
+				if err := ln.SetDeadline(time.Now().Add(time.Second)); err != nil {
+					t.Fatal(err)
+					return
+				}
+
+				fd, err := ln.Accept()
+				if err != nil {
+					if os.IsTimeout(err) {
+						continue
+					}
+
+					t.Fatal(err)
+				}
+
+				go func(c net.Conn) {
+					defer c.Close()
+
+					buf := make([]byte, 1024)
+
+					nr, err := c.Read(buf)
+					assert.NoError(err)
+
+					cmd := string(buf[0:nr])
+					assert.Equal("show stat\n", cmd)
+
+					_, err = c.Write([]byte(testingCSV))
+					assert.NoError(err)
+				}(fd)
+			}
+		}
+	}()
+
+	<-serverReady
+
+	stats, err := GetStat(socketPath)
+	assert.NoError(err)
+	assert.Len(stats, 4)
+
+	//t.Log(stats)
 }
