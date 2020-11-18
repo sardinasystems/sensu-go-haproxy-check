@@ -186,5 +186,11 @@ func checkArgs(event *types.Event) (int, error) {
 }
 
 func executeCheck(event *types.Event) (int, error) {
+
+	stats, err := haproxy.GetStat(plugin.SocketPath)
+	if err != nil {
+		return sensu.CheckStateUnknown, fmt.Errorf("Failed to get service stats: %w", err)
+	}
+
 	return sensu.CheckStateOK, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/gocarina/gocsv"
 )
@@ -169,11 +170,16 @@ func ParseStatCSV(data io.Reader) (StatData, error) {
 }
 
 func GetStat(socketPath string) (StatData, error) {
-	sock, err := net.Dial("unix", socketPath)
+	//sock, err := net.Dial("unix", socketPath)
+	addr := &net.UnixAddr{Name: socketPath}
+	sock, err := net.DialUnix("unix", nil, addr)
 	if err != nil {
 		return nil, fmt.Errorf("socket open error: %w", err)
 	}
 	defer sock.Close()
+
+	// Suggest that IO shouldn't ever reach so long timeout
+	sock.SetDeadline(time.Now().Add(time.Second))
 
 	_, err = sock.Write([]byte("show stat\n"))
 	if err != nil {
