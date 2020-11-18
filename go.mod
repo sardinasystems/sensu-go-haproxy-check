@@ -1,6 +1,6 @@
 module github.com/sardinasystems/sensu-go-haproxy-check
 
-go 1.14
+go 1.15
 
 require (
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
