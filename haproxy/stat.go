@@ -210,7 +210,7 @@ func (l StatLine) LogName() string {
 
 // SessionLimitPercentage calculates percentage usage of sessions limit
 func (l StatLine) SessionLimitPercentage() float32 {
-	return 100.0 * float32(l.Slim) / float32(l.Scur)
+	return 100.0 * float32(l.Scur) / float32(l.Slim)
 }
 
 // Servers makes a copy of StatService without frontend and backend entries

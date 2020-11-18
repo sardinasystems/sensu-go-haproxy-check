@@ -42,7 +42,7 @@ var (
 	}
 
 	options = []*sensu.PluginConfigOption{
-		&sensu.PluginConfigOption{
+		{
 			Path:      "socket",
 			Env:       "HAPROXY_SOCKET",
 			Argument:  "socket",
@@ -51,7 +51,7 @@ var (
 			Usage:     "Path to haproxy control socket",
 			Value:     &plugin.SocketPath,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "service",
 			Env:       "HAPROXY_SERVICE",
 			Argument:  "service",
@@ -60,7 +60,7 @@ var (
 			Usage:     "Service name to check",
 			Value:     &plugin.Service,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "all_services",
 			Env:       "HAPROXY_ALL_SERVICES",
 			Argument:  "all-services",
@@ -69,7 +69,7 @@ var (
 			Usage:     "Check all services",
 			Value:     &plugin.AllServices,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "missing_ok",
 			Env:       "HAPROXY_MISSING_OK",
 			Argument:  "missing-ok",
@@ -78,7 +78,7 @@ var (
 			Usage:     "Service missing is Ok",
 			Value:     &plugin.MissingOk,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "missing_fail",
 			Env:       "HAPROXY_MISSING_FAIL",
 			Argument:  "missing-fail",
@@ -87,43 +87,43 @@ var (
 			Usage:     "Service missing is Fail",
 			Value:     &plugin.MissingFail,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "warning_percent",
 			Env:       "HAPROXY_WARNING_PERCENT",
 			Argument:  "warning-percent",
 			Shorthand: "w",
-			Default:   50,
+			Default:   float32(50.0),
 			Usage:     "Warning percent",
 			Value:     &plugin.WarningPercent,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "critical_percent",
 			Env:       "HAPROXY_CRITICAL_PERCENT",
 			Argument:  "critical-percent",
 			Shorthand: "c",
-			Default:   25,
+			Default:   float32(25.0),
 			Usage:     "Critical percent",
 			Value:     &plugin.CriticalPercent,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "session_warning_percent",
 			Env:       "HAPROXY_SESSION_WARNING_PERCENT",
 			Argument:  "session-warning-percent",
 			Shorthand: "W",
-			Default:   75,
+			Default:   float32(75.0),
 			Usage:     "Session Limit Warning percent",
 			Value:     &plugin.SessionWarningPercent,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "session_critical_percent",
 			Env:       "HAPROXY_SESSION_CRITICAL_PERCENT",
 			Argument:  "session-critical-percent",
 			Shorthand: "C",
-			Default:   90,
+			Default:   float32(90.0),
 			Usage:     "Session Limit Critical percent",
 			Value:     &plugin.SessionCriticalPercent,
 		},
-		// &sensu.PluginConfigOption{
+		// {
 		// 	Path:      "backend_session_warning_percent",
 		// 	Env:       "HAPROXY_BACKEND_SESSION_WARNING_PERCENT",
 		// 	Argument:  "backend-session-warning-percent",
@@ -132,7 +132,7 @@ var (
 		// 	Usage:     "Per Backend Session Limit Warning percent",
 		// 	Value:     &plugin.BackendSessionWarningPercent,
 		// },
-		// &sensu.PluginConfigOption{
+		// {
 		// 	Path:      "backend_session_critical_percent",
 		// 	Env:       "HAPROXY_BACKEND_SESSION_CRITICAL_PERCENT",
 		// 	Argument:  "backend-session-critical-percent",
@@ -141,7 +141,7 @@ var (
 		// 	Usage:     "Per Backend Session Limit Critical percent",
 		// 	Value:     &plugin.BackendSessionCriticalPercent,
 		// },
-		&sensu.PluginConfigOption{
+		{
 			Path:      "min_warning_count",
 			Env:       "HAPROXY_MIN_WARNING_COUNT",
 			Argument:  "min-warning-count",
@@ -150,7 +150,7 @@ var (
 			Usage:     "Minimum server Warning count",
 			Value:     &plugin.MinWarningCount,
 		},
-		&sensu.PluginConfigOption{
+		{
 			Path:      "min_critical_count",
 			Env:       "HAPROXY_MIN_CRITICAL_COUNT",
 			Argument:  "min-critical-count",
@@ -233,6 +233,11 @@ func executeCheck(event *types.Event) (int, error) {
 func checkService(pxname string, svc haproxy.StatService) (int, error) {
 	servers := svc.Servers()
 
+	// Ignore FRONTEND-only entries
+	if len(servers) == 0 && plugin.AllServices {
+		return sensu.CheckStateOK, nil
+	}
+
 	upCount := 0
 	failedNames := make([]string, 0)
 
@@ -244,7 +249,7 @@ func checkService(pxname string, svc haproxy.StatService) (int, error) {
 		}
 	}
 
-	upPercent := 100.0 * float32(len(servers)) / float32(upCount)
+	upPercent := 100.0 * float32(upCount) / float32(len(servers))
 
 	criticalSesions := servers.Filter(func(s haproxy.StatLine) bool {
 		return s.Slim > 0 && s.SessionLimitPercentage() > plugin.SessionCriticalPercent
