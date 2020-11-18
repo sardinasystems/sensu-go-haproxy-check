@@ -5,29 +5,31 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
-	"github.com/sardinasystems/sensu-go-haproxy-check/haproxy"
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
 	"github.com/sensu/sensu-go/types"
 	"go.uber.org/multierr"
+
+	"github.com/sardinasystems/sensu-go-haproxy-check/haproxy"
 )
 
 // Config represents the check plugin config.
 type Config struct {
 	sensu.PluginConfig
-	SocketPath                    string
-	AllServices                   bool
-	Service                       string
-	MissingOk                     bool
-	MissingFail                   bool
-	WarningPercent                int
-	CriticalPercent               int
-	SessionWarningPercent         int
-	SessionCriticalPercent        int
-	BackendSessionWarningPercent  int
-	BackendSessionCriticalPercent int
-	MinWarningCount               int
-	MinCriticalCount              int
+	SocketPath             string
+	AllServices            bool
+	Service                string
+	MissingOk              bool
+	MissingFail            bool
+	WarningPercent         float32
+	CriticalPercent        float32
+	SessionWarningPercent  float32
+	SessionCriticalPercent float32
+	// BackendSessionWarningPercent  float32
+	// BackendSessionCriticalPercent float32
+	MinWarningCount  int
+	MinCriticalCount int
 }
 
 var (
@@ -121,24 +123,24 @@ var (
 			Usage:     "Session Limit Critical percent",
 			Value:     &plugin.SessionCriticalPercent,
 		},
-		&sensu.PluginConfigOption{
-			Path:      "backend_session_warning_percent",
-			Env:       "HAPROXY_BACKEND_SESSION_WARNING_PERCENT",
-			Argument:  "backend-session-warning-percent",
-			Shorthand: "b",
-			Default:   0,
-			Usage:     "Per Backend Session Limit Warning percent",
-			Value:     &plugin.BackendSessionWarningPercent,
-		},
-		&sensu.PluginConfigOption{
-			Path:      "backend_session_critical_percent",
-			Env:       "HAPROXY_BACKEND_SESSION_CRITICAL_PERCENT",
-			Argument:  "backend-session-critical-percent",
-			Shorthand: "B",
-			Default:   0,
-			Usage:     "Per Backend Session Limit Critical percent",
-			Value:     &plugin.BackendSessionCriticalPercent,
-		},
+		// &sensu.PluginConfigOption{
+		// 	Path:      "backend_session_warning_percent",
+		// 	Env:       "HAPROXY_BACKEND_SESSION_WARNING_PERCENT",
+		// 	Argument:  "backend-session-warning-percent",
+		// 	Shorthand: "b",
+		// 	Default:   0,
+		// 	Usage:     "Per Backend Session Limit Warning percent",
+		// 	Value:     &plugin.BackendSessionWarningPercent,
+		// },
+		// &sensu.PluginConfigOption{
+		// 	Path:      "backend_session_critical_percent",
+		// 	Env:       "HAPROXY_BACKEND_SESSION_CRITICAL_PERCENT",
+		// 	Argument:  "backend-session-critical-percent",
+		// 	Shorthand: "B",
+		// 	Default:   0,
+		// 	Usage:     "Per Backend Session Limit Critical percent",
+		// 	Value:     &plugin.BackendSessionCriticalPercent,
+		// },
 		&sensu.PluginConfigOption{
 			Path:      "min_warning_count",
 			Env:       "HAPROXY_MIN_WARNING_COUNT",
@@ -229,5 +231,57 @@ func executeCheck(event *types.Event) (int, error) {
 }
 
 func checkService(pxname string, svc haproxy.StatService) (int, error) {
-	return 0, nil
+	servers := svc.Servers()
+
+	upCount := 0
+	failedNames := make([]string, 0)
+
+	for _, s := range servers {
+		if s.IsUp() {
+			upCount++
+		} else {
+			failedNames = append(failedNames, s.LogName())
+		}
+	}
+
+	upPercent := 100.0 * float32(len(servers)) / float32(upCount)
+
+	criticalSesions := servers.Filter(func(s haproxy.StatLine) bool {
+		return s.Slim > 0 && s.SessionLimitPercentage() > plugin.SessionCriticalPercent
+	})
+
+	warningSesions := servers.Filter(func(s haproxy.StatLine) bool {
+		return s.Slim > 0 && s.SessionLimitPercentage() > plugin.SessionWarningPercent
+	})
+
+	log.Printf("UP: %.0f%% of #%d %s services", upPercent, len(servers), pxname)
+	if len(failedNames) > 0 {
+		log.Printf("DOWN: %s", strings.Join(failedNames, ", "))
+	}
+
+	if len(servers) < plugin.MinCriticalCount {
+		return sensu.CheckStateCritical, nil
+	} else if upPercent < plugin.CriticalPercent {
+		return sensu.CheckStateCritical, nil
+	} else if len(criticalSesions) > 0 {
+		log.Printf("Active sessions critical:")
+		for _, s := range criticalSesions {
+			log.Printf("\t%s: %d of %d (%.0f%%) sessions", s.LogName(), s.Scur, s.Slim, s.SessionLimitPercentage())
+		}
+		return sensu.CheckStateCritical, nil
+	}
+
+	if len(servers) < plugin.MinWarningCount {
+		return sensu.CheckStateWarning, nil
+	} else if upPercent < plugin.WarningPercent {
+		return sensu.CheckStateWarning, nil
+	} else if len(criticalSesions) > 0 {
+		log.Printf("Active sessions warning:")
+		for _, s := range warningSesions {
+			log.Printf("\t%s: %d of %d (%.0f%%) sessions", s.LogName(), s.Scur, s.Slim, s.SessionLimitPercentage())
+		}
+		return sensu.CheckStateWarning, nil
+	}
+
+	return sensu.CheckStateOK, nil
 }

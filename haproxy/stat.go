@@ -199,11 +199,32 @@ func (l StatLine) IsUp() bool {
 	return l.Status == "OPEN" || l.Status == "UP" || l.Status == "no check" || l.Status == "DRAIN"
 }
 
+// LogName make a name for check logs
+func (l StatLine) LogName() string {
+	if l.CheckStatus == "" {
+		return fmt.Sprintf("%s/%s", l.Pxname, l.Svname)
+	}
+
+	return fmt.Sprintf("%s/%s[%s]", l.Pxname, l.Svname, l.CheckStatus)
+}
+
+// SessionLimitPercentage calculates percentage usage of sessions limit
+func (l StatLine) SessionLimitPercentage() float32 {
+	return 100.0 * float32(l.Slim) / float32(l.Scur)
+}
+
 // Servers makes a copy of StatService without frontend and backend entries
 func (s StatService) Servers() StatService {
+	return s.Filter(func(s StatLine) bool {
+		return s.Svname != Frontend && s.Svname != Backend
+	})
+}
+
+// Filter return entries which passes the testFunc
+func (s StatService) Filter(testFunc func(StatLine) bool) StatService {
 	ret := make(StatService)
 	for key, value := range s {
-		if key == Frontend || key == Backend {
+		if !testFunc(value) {
 			continue
 		}
 
