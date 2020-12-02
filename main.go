@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/sensu-community/sensu-plugin-sdk/sensu"
@@ -30,6 +32,7 @@ type Config struct {
 	// BackendSessionCriticalPercent float32
 	MinWarningCount  int
 	MinCriticalCount int
+	Debug            bool
 }
 
 var (
@@ -159,6 +162,15 @@ var (
 			Usage:     "Minimum server Critical count",
 			Value:     &plugin.MinCriticalCount,
 		},
+		{
+			Path:      "debug",
+			Env:       "HAPROXY_DEBUG",
+			Argument:  "debug",
+			Shorthand: "d",
+			Default:   false,
+			Usage:     "output debugging data",
+			Value:     &plugin.Debug,
+		},
 	}
 )
 
@@ -197,13 +209,16 @@ func executeCheck(event *types.Event) (int, error) {
 	}
 
 	// Leave only selected services
+	pxkeys := make([]string, 0)
 	for key := range stats {
 		if plugin.AllServices || key == plugin.Service {
+			pxkeys = append(pxkeys, key)
 			continue
 		}
 
 		delete(stats, key)
 	}
+	sort.Strings(pxkeys)
 
 	// No services
 	if len(stats) == 0 {
@@ -219,11 +234,17 @@ func executeCheck(event *types.Event) (int, error) {
 
 	ret := sensu.CheckStateOK
 	err = nil
-	for pxname, stat := range stats {
+	for _, pxname := range pxkeys {
+		stat := stats[pxname]
 		newret, err2 := checkService(pxname, stat)
 		err = multierr.Append(err, err2)
 		if newret > ret {
 			ret = newret
+		}
+
+		if plugin.Debug && (newret > sensu.CheckStateOK || err2 != nil) {
+			b, _ := json.Marshal(&stat)
+			log.Print(string(b))
 		}
 	}
 
@@ -232,6 +253,12 @@ func executeCheck(event *types.Event) (int, error) {
 
 func checkService(pxname string, svc haproxy.StatService) (int, error) {
 	servers := svc.Servers()
+	backend, backendOk := svc[haproxy.Backend]
+
+	var backendPtr *haproxy.StatLine
+	if backendOk {
+		backendPtr = &backend
+	}
 
 	// Ignore FRONTEND-only entries
 	if len(servers) == 0 && plugin.AllServices {
@@ -242,7 +269,7 @@ func checkService(pxname string, svc haproxy.StatService) (int, error) {
 	failedNames := make([]string, 0)
 
 	for _, s := range servers {
-		if s.IsUp() {
+		if s.IsUp(backendPtr) {
 			upCount++
 		} else {
 			failedNames = append(failedNames, s.LogName())

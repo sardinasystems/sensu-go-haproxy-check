@@ -23,125 +23,128 @@ type StatLine struct {
 	// used = set()
 	// fields = (f for f in fields if f not in used and (used.add(f) or True))
 	// for field in fields:
+	//     struct_name = field[0]
+	//     csv_name = field[1]
+	//     json_name = field[1].replace('# ', '')
 	//     type_ = 'string'
-	//     #if field[1].endswith(('name', 'desc')) or field[1] in ['status', 'mode', 'check_status']:
+	//     #if csv_name.endswith(('name', 'desc')) or csv_name in ['status', 'mode', 'check_status']:
 	//     #    type_ = 'string'
-	//     if field[1] in ['scur', 'slim']:	# NOTE(vermakov): we use only a few fields in check, leave others as string
+	//     if csv_name in ['scur', 'slim']:	# NOTE(vermakov): we use only a few fields in check, leave others as string
 	//         type_ = 'int'
-	//     cog.outl(f"""{field[0]:28s} {type_:6s} `csv:"{field[1]}"`""")
+	//     cog.outl(f"""{struct_name:28s} {type_:6s} `csv:"{csv_name}" json:"{json_name},omitempty"`""")
 	// ]]]
-	Pxname                       string `csv:"# pxname"`
-	Svname                       string `csv:"svname"`
-	Qcur                         string `csv:"qcur"`
-	Qmax                         string `csv:"qmax"`
-	Scur                         int    `csv:"scur"`
-	Smax                         string `csv:"smax"`
-	Slim                         int    `csv:"slim"`
-	Stot                         string `csv:"stot"`
-	Bin                          string `csv:"bin"`
-	Bout                         string `csv:"bout"`
-	Dreq                         string `csv:"dreq"`
-	Dresp                        string `csv:"dresp"`
-	Ereq                         string `csv:"ereq"`
-	Econ                         string `csv:"econ"`
-	Eresp                        string `csv:"eresp"`
-	Wretr                        string `csv:"wretr"`
-	Wredis                       string `csv:"wredis"`
-	Status                       string `csv:"status"`
-	Weight                       string `csv:"weight"`
-	Act                          string `csv:"act"`
-	Bck                          string `csv:"bck"`
-	Chkfail                      string `csv:"chkfail"`
-	Chkdown                      string `csv:"chkdown"`
-	Lastchg                      string `csv:"lastchg"`
-	Downtime                     string `csv:"downtime"`
-	Qlimit                       string `csv:"qlimit"`
-	Pid                          string `csv:"pid"`
-	Iid                          string `csv:"iid"`
-	Sid                          string `csv:"sid"`
-	Throttle                     string `csv:"throttle"`
-	Lbtot                        string `csv:"lbtot"`
-	Tracked                      string `csv:"tracked"`
-	Type                         string `csv:"type"`
-	Rate                         string `csv:"rate"`
-	RateLim                      string `csv:"rate_lim"`
-	RateMax                      string `csv:"rate_max"`
-	CheckStatus                  string `csv:"check_status"`
-	CheckCode                    string `csv:"check_code"`
-	CheckDuration                string `csv:"check_duration"`
-	Hrsp1Xx                      string `csv:"hrsp_1xx"`
-	Hrsp2Xx                      string `csv:"hrsp_2xx"`
-	Hrsp3Xx                      string `csv:"hrsp_3xx"`
-	Hrsp4Xx                      string `csv:"hrsp_4xx"`
-	Hrsp5Xx                      string `csv:"hrsp_5xx"`
-	HrspOther                    string `csv:"hrsp_other"`
-	Hanafail                     string `csv:"hanafail"`
-	ReqRate                      string `csv:"req_rate"`
-	ReqRateMax                   string `csv:"req_rate_max"`
-	ReqTot                       string `csv:"req_tot"`
-	CliAbrt                      string `csv:"cli_abrt"`
-	SrvAbrt                      string `csv:"srv_abrt"`
-	CompIn                       string `csv:"comp_in"`
-	CompOut                      string `csv:"comp_out"`
-	CompByp                      string `csv:"comp_byp"`
-	CompRsp                      string `csv:"comp_rsp"`
-	Lastsess                     string `csv:"lastsess"`
-	LastChk                      string `csv:"last_chk"`
-	LastAgt                      string `csv:"last_agt"`
-	Qtime                        string `csv:"qtime"`
-	Ctime                        string `csv:"ctime"`
-	Rtime                        string `csv:"rtime"`
-	Ttime                        string `csv:"ttime"`
-	AgentStatus                  string `csv:"agent_status"`
-	AgentCode                    string `csv:"agent_code"`
-	AgentDuration                string `csv:"agent_duration"`
-	CheckDesc                    string `csv:"check_desc"`
-	AgentDesc                    string `csv:"agent_desc"`
-	CheckRise                    string `csv:"check_rise"`
-	CheckFall                    string `csv:"check_fall"`
-	CheckHealth                  string `csv:"check_health"`
-	AgentRise                    string `csv:"agent_rise"`
-	AgentFall                    string `csv:"agent_fall"`
-	AgentHealth                  string `csv:"agent_health"`
-	Addr                         string `csv:"addr"`
-	Cookie                       string `csv:"cookie"`
-	Mode                         string `csv:"mode"`
-	Algo                         string `csv:"algo"`
-	ConnRate                     string `csv:"conn_rate"`
-	ConnRateMax                  string `csv:"conn_rate_max"`
-	ConnTot                      string `csv:"conn_tot"`
-	Intercepted                  string `csv:"intercepted"`
-	Dcon                         string `csv:"dcon"`
-	Dses                         string `csv:"dses"`
-	Wrew                         string `csv:"wrew"`
-	Connect                      string `csv:"connect"`
-	Reuse                        string `csv:"reuse"`
-	CacheLookups                 string `csv:"cache_lookups"`
-	CacheHits                    string `csv:"cache_hits"`
-	SrvIcur                      string `csv:"srv_icur"`
-	SrcIlim                      string `csv:"src_ilim"`
-	QtimeMax                     string `csv:"qtime_max"`
-	CtimeMax                     string `csv:"ctime_max"`
-	RtimeMax                     string `csv:"rtime_max"`
-	TtimeMax                     string `csv:"ttime_max"`
-	Eint                         string `csv:"eint"`
-	IdleConnCur                  string `csv:"idle_conn_cur"`
-	SafeConnCur                  string `csv:"safe_conn_cur"`
-	UsedConnCur                  string `csv:"used_conn_cur"`
-	NeedConnEst                  string `csv:"need_conn_est"`
-	Uweight                      string `csv:"uweight"`
-	H2HeadersRcvd                string `csv:"h2_headers_rcvd"`
-	H2DataRcvd                   string `csv:"h2_data_rcvd"`
-	H2SettingsRcvd               string `csv:"h2_settings_rcvd"`
-	H2RstStreamRcvd              string `csv:"h2_rst_stream_rcvd"`
-	H2GoawayRcvd                 string `csv:"h2_goaway_rcvd"`
-	H2DetectedConnProtocolErrors string `csv:"h2_detected_conn_protocol_errors"`
-	H2DetectedStrmProtocolErrors string `csv:"h2_detected_strm_protocol_errors"`
-	H2RstStreamResp              string `csv:"h2_rst_stream_resp"`
-	H2GoawayResp                 string `csv:"h2_goaway_resp"`
-	H2OpenConnections            string `csv:"h2_open_connections"`
-	H2BackendOpenStreams         string `csv:"h2_backend_open_streams"`
-	// [[[end]]]
+	Pxname                       string `csv:"# pxname" json:"pxname,omitempty"`
+	Svname                       string `csv:"svname" json:"svname,omitempty"`
+	Qcur                         string `csv:"qcur" json:"qcur,omitempty"`
+	Qmax                         string `csv:"qmax" json:"qmax,omitempty"`
+	Scur                         int    `csv:"scur" json:"scur,omitempty"`
+	Smax                         string `csv:"smax" json:"smax,omitempty"`
+	Slim                         int    `csv:"slim" json:"slim,omitempty"`
+	Stot                         string `csv:"stot" json:"stot,omitempty"`
+	Bin                          string `csv:"bin" json:"bin,omitempty"`
+	Bout                         string `csv:"bout" json:"bout,omitempty"`
+	Dreq                         string `csv:"dreq" json:"dreq,omitempty"`
+	Dresp                        string `csv:"dresp" json:"dresp,omitempty"`
+	Ereq                         string `csv:"ereq" json:"ereq,omitempty"`
+	Econ                         string `csv:"econ" json:"econ,omitempty"`
+	Eresp                        string `csv:"eresp" json:"eresp,omitempty"`
+	Wretr                        string `csv:"wretr" json:"wretr,omitempty"`
+	Wredis                       string `csv:"wredis" json:"wredis,omitempty"`
+	Status                       string `csv:"status" json:"status,omitempty"`
+	Weight                       string `csv:"weight" json:"weight,omitempty"`
+	Act                          string `csv:"act" json:"act,omitempty"`
+	Bck                          string `csv:"bck" json:"bck,omitempty"`
+	Chkfail                      string `csv:"chkfail" json:"chkfail,omitempty"`
+	Chkdown                      string `csv:"chkdown" json:"chkdown,omitempty"`
+	Lastchg                      string `csv:"lastchg" json:"lastchg,omitempty"`
+	Downtime                     string `csv:"downtime" json:"downtime,omitempty"`
+	Qlimit                       string `csv:"qlimit" json:"qlimit,omitempty"`
+	Pid                          string `csv:"pid" json:"pid,omitempty"`
+	Iid                          string `csv:"iid" json:"iid,omitempty"`
+	Sid                          string `csv:"sid" json:"sid,omitempty"`
+	Throttle                     string `csv:"throttle" json:"throttle,omitempty"`
+	Lbtot                        string `csv:"lbtot" json:"lbtot,omitempty"`
+	Tracked                      string `csv:"tracked" json:"tracked,omitempty"`
+	Type                         string `csv:"type" json:"type,omitempty"`
+	Rate                         string `csv:"rate" json:"rate,omitempty"`
+	RateLim                      string `csv:"rate_lim" json:"rate_lim,omitempty"`
+	RateMax                      string `csv:"rate_max" json:"rate_max,omitempty"`
+	CheckStatus                  string `csv:"check_status" json:"check_status,omitempty"`
+	CheckCode                    string `csv:"check_code" json:"check_code,omitempty"`
+	CheckDuration                string `csv:"check_duration" json:"check_duration,omitempty"`
+	Hrsp1Xx                      string `csv:"hrsp_1xx" json:"hrsp_1xx,omitempty"`
+	Hrsp2Xx                      string `csv:"hrsp_2xx" json:"hrsp_2xx,omitempty"`
+	Hrsp3Xx                      string `csv:"hrsp_3xx" json:"hrsp_3xx,omitempty"`
+	Hrsp4Xx                      string `csv:"hrsp_4xx" json:"hrsp_4xx,omitempty"`
+	Hrsp5Xx                      string `csv:"hrsp_5xx" json:"hrsp_5xx,omitempty"`
+	HrspOther                    string `csv:"hrsp_other" json:"hrsp_other,omitempty"`
+	Hanafail                     string `csv:"hanafail" json:"hanafail,omitempty"`
+	ReqRate                      string `csv:"req_rate" json:"req_rate,omitempty"`
+	ReqRateMax                   string `csv:"req_rate_max" json:"req_rate_max,omitempty"`
+	ReqTot                       string `csv:"req_tot" json:"req_tot,omitempty"`
+	CliAbrt                      string `csv:"cli_abrt" json:"cli_abrt,omitempty"`
+	SrvAbrt                      string `csv:"srv_abrt" json:"srv_abrt,omitempty"`
+	CompIn                       string `csv:"comp_in" json:"comp_in,omitempty"`
+	CompOut                      string `csv:"comp_out" json:"comp_out,omitempty"`
+	CompByp                      string `csv:"comp_byp" json:"comp_byp,omitempty"`
+	CompRsp                      string `csv:"comp_rsp" json:"comp_rsp,omitempty"`
+	Lastsess                     string `csv:"lastsess" json:"lastsess,omitempty"`
+	LastChk                      string `csv:"last_chk" json:"last_chk,omitempty"`
+	LastAgt                      string `csv:"last_agt" json:"last_agt,omitempty"`
+	Qtime                        string `csv:"qtime" json:"qtime,omitempty"`
+	Ctime                        string `csv:"ctime" json:"ctime,omitempty"`
+	Rtime                        string `csv:"rtime" json:"rtime,omitempty"`
+	Ttime                        string `csv:"ttime" json:"ttime,omitempty"`
+	AgentStatus                  string `csv:"agent_status" json:"agent_status,omitempty"`
+	AgentCode                    string `csv:"agent_code" json:"agent_code,omitempty"`
+	AgentDuration                string `csv:"agent_duration" json:"agent_duration,omitempty"`
+	CheckDesc                    string `csv:"check_desc" json:"check_desc,omitempty"`
+	AgentDesc                    string `csv:"agent_desc" json:"agent_desc,omitempty"`
+	CheckRise                    string `csv:"check_rise" json:"check_rise,omitempty"`
+	CheckFall                    string `csv:"check_fall" json:"check_fall,omitempty"`
+	CheckHealth                  string `csv:"check_health" json:"check_health,omitempty"`
+	AgentRise                    string `csv:"agent_rise" json:"agent_rise,omitempty"`
+	AgentFall                    string `csv:"agent_fall" json:"agent_fall,omitempty"`
+	AgentHealth                  string `csv:"agent_health" json:"agent_health,omitempty"`
+	Addr                         string `csv:"addr" json:"addr,omitempty"`
+	Cookie                       string `csv:"cookie" json:"cookie,omitempty"`
+	Mode                         string `csv:"mode" json:"mode,omitempty"`
+	Algo                         string `csv:"algo" json:"algo,omitempty"`
+	ConnRate                     string `csv:"conn_rate" json:"conn_rate,omitempty"`
+	ConnRateMax                  string `csv:"conn_rate_max" json:"conn_rate_max,omitempty"`
+	ConnTot                      string `csv:"conn_tot" json:"conn_tot,omitempty"`
+	Intercepted                  string `csv:"intercepted" json:"intercepted,omitempty"`
+	Dcon                         string `csv:"dcon" json:"dcon,omitempty"`
+	Dses                         string `csv:"dses" json:"dses,omitempty"`
+	Wrew                         string `csv:"wrew" json:"wrew,omitempty"`
+	Connect                      string `csv:"connect" json:"connect,omitempty"`
+	Reuse                        string `csv:"reuse" json:"reuse,omitempty"`
+	CacheLookups                 string `csv:"cache_lookups" json:"cache_lookups,omitempty"`
+	CacheHits                    string `csv:"cache_hits" json:"cache_hits,omitempty"`
+	SrvIcur                      string `csv:"srv_icur" json:"srv_icur,omitempty"`
+	SrcIlim                      string `csv:"src_ilim" json:"src_ilim,omitempty"`
+	QtimeMax                     string `csv:"qtime_max" json:"qtime_max,omitempty"`
+	CtimeMax                     string `csv:"ctime_max" json:"ctime_max,omitempty"`
+	RtimeMax                     string `csv:"rtime_max" json:"rtime_max,omitempty"`
+	TtimeMax                     string `csv:"ttime_max" json:"ttime_max,omitempty"`
+	Eint                         string `csv:"eint" json:"eint,omitempty"`
+	IdleConnCur                  string `csv:"idle_conn_cur" json:"idle_conn_cur,omitempty"`
+	SafeConnCur                  string `csv:"safe_conn_cur" json:"safe_conn_cur,omitempty"`
+	UsedConnCur                  string `csv:"used_conn_cur" json:"used_conn_cur,omitempty"`
+	NeedConnEst                  string `csv:"need_conn_est" json:"need_conn_est,omitempty"`
+	Uweight                      string `csv:"uweight" json:"uweight,omitempty"`
+	H2HeadersRcvd                string `csv:"h2_headers_rcvd" json:"h2_headers_rcvd,omitempty"`
+	H2DataRcvd                   string `csv:"h2_data_rcvd" json:"h2_data_rcvd,omitempty"`
+	H2SettingsRcvd               string `csv:"h2_settings_rcvd" json:"h2_settings_rcvd,omitempty"`
+	H2RstStreamRcvd              string `csv:"h2_rst_stream_rcvd" json:"h2_rst_stream_rcvd,omitempty"`
+	H2GoawayRcvd                 string `csv:"h2_goaway_rcvd" json:"h2_goaway_rcvd,omitempty"`
+	H2DetectedConnProtocolErrors string `csv:"h2_detected_conn_protocol_errors" json:"h2_detected_conn_protocol_errors,omitempty"`
+	H2DetectedStrmProtocolErrors string `csv:"h2_detected_strm_protocol_errors" json:"h2_detected_strm_protocol_errors,omitempty"`
+	H2RstStreamResp              string `csv:"h2_rst_stream_resp" json:"h2_rst_stream_resp,omitempty"`
+	H2GoawayResp                 string `csv:"h2_goaway_resp" json:"h2_goaway_resp,omitempty"`
+	H2OpenConnections            string `csv:"h2_open_connections" json:"h2_open_connections,omitempty"`
+	H2BackendOpenStreams         string `csv:"h2_backend_open_streams" json:"h2_backend_open_streams,omitempty"`
+	// [[[end]]] (checksum: 0317562b38ec931796a67e29935fb72f)
 }
 
 // StatService is a mapping of all SvName lines
@@ -195,8 +198,17 @@ func GetStats(socketPath string) (Stats, error) {
 }
 
 // IsUp checks that status of the service is up
-func (l StatLine) IsUp() bool {
-	return l.Status == "OPEN" || l.Status == "UP" || l.Status == "no check" || l.Status == "DRAIN"
+func (l StatLine) IsUp(backend *StatLine) bool {
+	// In some rare calls we get empty Status for servers
+	// in that case we fallback to backend state
+	if l.Status == "" && backend != nil {
+		return backend.IsUp(nil)
+	}
+
+	return (l.Status == "OPEN" ||
+		l.Status == "UP" ||
+		l.Status == "no check" ||
+		l.Status == "DRAIN")
 }
 
 // LogName make a name for check logs
