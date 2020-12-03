@@ -31,7 +31,7 @@ func TestParseStatCSV(t *testing.T) {
 
 	csvData := strings.NewReader(testingCSV)
 
-	stats, err := ParseStatCSV(csvData)
+	stats, _, err := ParseStatCSV(csvData)
 	assert.NoError(err)
 	assert.Len(stats, 4)
 
@@ -97,7 +97,7 @@ func TestGetStats(t *testing.T) {
 
 	<-serverReady
 
-	stats, err := GetStats(socketPath)
+	stats, _, err := GetStats(socketPath)
 	assert.NoError(err)
 	assert.Len(stats, 4)
 

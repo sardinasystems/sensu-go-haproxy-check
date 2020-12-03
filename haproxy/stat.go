@@ -155,18 +155,17 @@ type StatService map[string]StatLine
 type Stats = map[string]StatService
 
 // ParseStatCSV parses stats csv into Stats
-func ParseStatCSV(data io.Reader) (Stats, error) {
+func ParseStatCSV(data io.Reader) (Stats, []byte, error) {
 	lines := []StatLine{}
 
-	csv, err := ioutil.ReadAll(data)
+	rawData, err := ioutil.ReadAll(data)
 	if err != nil {
-		return nil, fmt.Errorf("read error: %w", err)
+		return nil, nil, fmt.Errorf("read error: %w", err)
 	}
 
-	err = gocsv.UnmarshalBytes(csv, &lines)
-	//err := gocsv.Unmarshal(data, &lines)
+	err = gocsv.UnmarshalBytes(rawData, &lines)
 	if err != nil {
-		return nil, fmt.Errorf("csv parse error: %w", err)
+		return nil, nil, fmt.Errorf("csv parse error: %w", err)
 	}
 
 	out := make(Stats)
@@ -180,16 +179,15 @@ func ParseStatCSV(data io.Reader) (Stats, error) {
 		pxmap[line.Svname] = line
 	}
 
-	return out, nil
+	return out, rawData, nil
 }
 
 // GetStats query HAProxy for Stats
-func GetStats(socketPath string) (Stats, error) {
-	//sock, err := net.Dial("unix", socketPath)
+func GetStats(socketPath string) (Stats, []byte, error) {
 	addr := &net.UnixAddr{Name: socketPath}
 	sock, err := net.DialUnix("unix", nil, addr)
 	if err != nil {
-		return nil, fmt.Errorf("socket open error: %w", err)
+		return nil, nil, fmt.Errorf("socket open error: %w", err)
 	}
 	defer sock.Close()
 
@@ -198,7 +196,7 @@ func GetStats(socketPath string) (Stats, error) {
 
 	_, err = sock.Write([]byte("show stat\n"))
 	if err != nil {
-		return nil, fmt.Errorf("socket request error: %w", err)
+		return nil, nil, fmt.Errorf("socket request error: %w", err)
 	}
 
 	return ParseStatCSV(sock)
@@ -212,12 +210,12 @@ func (l StatLine) IsUp(backend *StatLine) bool {
 		return backend.IsUp(nil)
 	}
 
-	// XXX FIXME(vermakov): revise that later
+	// XXX FIXME(vermakov): revise that later, observed on HAproxy 2.3.0 -- 2.3.2
 	// sometimes we got report without BACKEND and empty Status
 	// let's consider it as ok, otherwise we get very noisy false positive notification
-	//if l.Status == "" && backend == nil {
-	//	return true;
-	//}
+	if l.Status == "" && backend == nil {
+		return true
+	}
 
 	return (l.Status == "OPEN" ||
 		l.Status == "UP" ||
@@ -242,7 +240,8 @@ func (l StatLine) SessionLimitPercentage() float32 {
 // Servers makes a copy of StatService without frontend and backend entries
 func (s StatService) Servers() StatService {
 	return s.Filter(func(s StatLine) bool {
-		return s.Svname != Frontend && s.Svname != Backend
+		// XXX(vermakov): we also filter empty Svname because that must be an error in HAproxy 2.3.0+
+		return s.Svname != Frontend && s.Svname != Backend && s.Svname != ""
 	})
 }
 
