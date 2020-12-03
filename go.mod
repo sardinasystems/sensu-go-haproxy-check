@@ -23,11 +23,11 @@ require (
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/testify v1.6.1
 	go.uber.org/multierr v1.6.0
-	golang.org/x/net v0.0.0-20201201195509-5d6afe98e0b7 // indirect
-	golang.org/x/sys v0.0.0-20201201145000-ef89a241ccb3 // indirect
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb // indirect
+	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect
 	golang.org/x/text v0.3.4 // indirect
-	google.golang.org/genproto v0.0.0-20201201144952-b05cb90ed32e // indirect
-	google.golang.org/grpc v1.33.2 // indirect
+	google.golang.org/genproto v0.0.0-20201203001206-6486ece9c497 // indirect
+	google.golang.org/grpc v1.34.0 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
