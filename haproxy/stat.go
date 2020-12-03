@@ -3,6 +3,7 @@ package haproxy
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"time"
 
@@ -157,7 +158,13 @@ type Stats = map[string]StatService
 func ParseStatCSV(data io.Reader) (Stats, error) {
 	lines := []StatLine{}
 
-	err := gocsv.Unmarshal(data, &lines)
+	csv, err := ioutil.ReadAll(data)
+	if err != nil {
+		return nil, fmt.Errorf("read error: %w", err)
+	}
+
+	err = gocsv.UnmarshalBytes(csv, &lines)
+	//err := gocsv.Unmarshal(data, &lines)
 	if err != nil {
 		return nil, fmt.Errorf("csv parse error: %w", err)
 	}
@@ -204,6 +211,13 @@ func (l StatLine) IsUp(backend *StatLine) bool {
 	if l.Status == "" && backend != nil {
 		return backend.IsUp(nil)
 	}
+
+	// XXX FIXME(vermakov): revise that later
+	// sometimes we got report without BACKEND and empty Status
+	// let's consider it as ok, otherwise we get very noisy false positive notification
+	//if l.Status == "" && backend == nil {
+	//	return true;
+	//}
 
 	return (l.Status == "OPEN" ||
 		l.Status == "UP" ||
