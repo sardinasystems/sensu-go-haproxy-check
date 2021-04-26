@@ -1,4 +1,4 @@
-module github.com/sardinasystems/sensu-go-chrony-check
+module github.com/sardinasystems/sensu-go-haproxy-check
 
 go 1.15
 
