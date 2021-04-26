@@ -12,7 +12,7 @@ import (
 
 const (
 	Frontend string = "FRONTEND"
-	Backend         = "BACKEND"
+	Backend  string = "BACKEND"
 )
 
 // StatLine represents one line from haproxy stat report
@@ -192,7 +192,10 @@ func GetStats(socketPath string) (Stats, []byte, error) {
 	defer sock.Close()
 
 	// Suggest that IO shouldn't ever reach so long timeout
-	sock.SetDeadline(time.Now().Add(time.Second))
+	err = sock.SetDeadline(time.Now().Add(time.Second))
+	if err != nil {
+		return nil, nil, fmt.Errorf("socket set deadline error: %w", err)
+	}
 
 	_, err = sock.Write([]byte("show stat\n"))
 	if err != nil {

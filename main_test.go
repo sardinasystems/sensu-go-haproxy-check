@@ -20,4 +20,5 @@ ipmi_exporter,BACKEND,0,0,0,6,10000,5049,1337424,6430583,0,0,,0,0,0,0,UP,3,3,0,,
 `
 
 func TestMain(t *testing.T) {
+	_ = testingCSV
 }

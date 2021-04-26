@@ -64,7 +64,8 @@ func TestGetStats(t *testing.T) {
 
 			default:
 				if err := ln.SetDeadline(time.Now().Add(time.Second)); err != nil {
-					t.Fatal(err)
+					// t.Fatal(err)
+					assert.NoError(err)
 					return
 				}
 
@@ -74,7 +75,8 @@ func TestGetStats(t *testing.T) {
 						continue
 					}
 
-					t.Fatal(err)
+					// t.Fatal(err)
+					assert.NoError(err)
 				}
 
 				go func(c net.Conn) {
