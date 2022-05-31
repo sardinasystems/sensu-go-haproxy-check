@@ -44,8 +44,8 @@ var (
 		},
 	}
 
-	options = []*sensu.PluginConfigOption{
-		{
+	options = []sensu.ConfigOption{
+		&sensu.PluginConfigOption[string]{
 			Path:      "socket",
 			Env:       "HAPROXY_SOCKET",
 			Argument:  "socket",
@@ -54,7 +54,7 @@ var (
 			Usage:     "Path to haproxy control socket",
 			Value:     &plugin.SocketPath,
 		},
-		{
+		&sensu.PluginConfigOption[string]{
 			Path:      "service",
 			Env:       "HAPROXY_SERVICE",
 			Argument:  "service",
@@ -63,7 +63,7 @@ var (
 			Usage:     "Service name to check",
 			Value:     &plugin.Service,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "all_services",
 			Env:       "HAPROXY_ALL_SERVICES",
 			Argument:  "all-services",
@@ -72,7 +72,7 @@ var (
 			Usage:     "Check all services",
 			Value:     &plugin.AllServices,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "missing_ok",
 			Env:       "HAPROXY_MISSING_OK",
 			Argument:  "missing-ok",
@@ -81,7 +81,7 @@ var (
 			Usage:     "Service missing is Ok",
 			Value:     &plugin.MissingOk,
 		},
-		{
+		&sensu.PluginConfigOption[false]{
 			Path:      "missing_fail",
 			Env:       "HAPROXY_MISSING_FAIL",
 			Argument:  "missing-fail",
@@ -90,7 +90,7 @@ var (
 			Usage:     "Service missing is Fail",
 			Value:     &plugin.MissingFail,
 		},
-		{
+		&sensu.PluginConfigOption[float32]{
 			Path:      "warning_percent",
 			Env:       "HAPROXY_WARNING_PERCENT",
 			Argument:  "warning-percent",
@@ -99,7 +99,7 @@ var (
 			Usage:     "Warning percent",
 			Value:     &plugin.WarningPercent,
 		},
-		{
+		&sensu.PluginConfigOption[float32]{
 			Path:      "critical_percent",
 			Env:       "HAPROXY_CRITICAL_PERCENT",
 			Argument:  "critical-percent",
@@ -108,7 +108,7 @@ var (
 			Usage:     "Critical percent",
 			Value:     &plugin.CriticalPercent,
 		},
-		{
+		&sensu.PluginConfigOption[float32]{
 			Path:      "session_warning_percent",
 			Env:       "HAPROXY_SESSION_WARNING_PERCENT",
 			Argument:  "session-warning-percent",
@@ -117,7 +117,7 @@ var (
 			Usage:     "Session Limit Warning percent",
 			Value:     &plugin.SessionWarningPercent,
 		},
-		{
+		&sensu.PluginConfigOption[float32]{
 			Path:      "session_critical_percent",
 			Env:       "HAPROXY_SESSION_CRITICAL_PERCENT",
 			Argument:  "session-critical-percent",
@@ -144,7 +144,7 @@ var (
 		// 	Usage:     "Per Backend Session Limit Critical percent",
 		// 	Value:     &plugin.BackendSessionCriticalPercent,
 		// },
-		{
+		&sensu.PluginConfigOption[int]{
 			Path:      "min_warning_count",
 			Env:       "HAPROXY_MIN_WARNING_COUNT",
 			Argument:  "min-warning-count",
@@ -153,7 +153,7 @@ var (
 			Usage:     "Minimum server Warning count",
 			Value:     &plugin.MinWarningCount,
 		},
-		{
+		&sensu.PluginConfigOption[int]{
 			Path:      "min_critical_count",
 			Env:       "HAPROXY_MIN_CRITICAL_COUNT",
 			Argument:  "min-critical-count",
@@ -162,7 +162,7 @@ var (
 			Usage:     "Minimum server Critical count",
 			Value:     &plugin.MinCriticalCount,
 		},
-		{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "debug",
 			Env:       "HAPROXY_DEBUG",
 			Argument:  "debug",

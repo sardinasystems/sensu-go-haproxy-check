@@ -11,8 +11,10 @@ import (
 )
 
 const (
+	// Frontend key
 	Frontend string = "FRONTEND"
-	Backend  string = "BACKEND"
+	// Backend key
+	Backend string = "BACKEND"
 )
 
 // StatLine represents one line from haproxy stat report
