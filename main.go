@@ -81,7 +81,7 @@ var (
 			Usage:     "Service missing is Ok",
 			Value:     &plugin.MissingOk,
 		},
-		&sensu.PluginConfigOption[false]{
+		&sensu.PluginConfigOption[bool]{
 			Path:      "missing_fail",
 			Env:       "HAPROXY_MISSING_FAIL",
 			Argument:  "missing-fail",
