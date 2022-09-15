@@ -3,7 +3,6 @@ package haproxy
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"time"
 
@@ -160,7 +159,7 @@ type Stats = map[string]StatService
 func ParseStatCSV(data io.Reader) (Stats, []byte, error) {
 	lines := []StatLine{}
 
-	rawData, err := ioutil.ReadAll(data)
+	rawData, err := io.ReadAll(data)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read error: %w", err)
 	}
