@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/gocarina/gocsv v0.0.0-20220914091333-ceebdd90b590
-	github.com/sensu/sensu-go/api/core/v2 v2.15.0
+	github.com/sensu/sensu-go/api/core/v2 v2.16.0
 	github.com/sensu/sensu-plugin-sdk v0.16.0
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/multierr v1.8.0
